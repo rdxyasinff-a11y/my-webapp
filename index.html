@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Newone Receiver</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background-color: #0f1217; color: white; padding-bottom: 80px; }
+        .header { text-align: center; padding: 20px; }
+        .diamond-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #6abaff, #007bff); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 30px; color: white; box-shadow: 0 4px 20px rgba(0,123,255,0.3); }
+        h1 { margin-top: 15px; font-size: 22px; font-weight: 600; }
+        .subtitle { color: #8a94a6; font-size: 14px; margin-top: 5px; }
+        .profile-card { background: #1a202c; margin: 15px; padding: 15px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 45px; height: 45px; background: #2d3748; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #a0aec0; }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-weight: bold; font-size: 16px; }
+        .user-id { color: #8a94a6; font-size: 12px; }
+        .level-btn { background: #2b6cb0; color: white; font-size: 12px; padding: 4px 10px; border-radius: 12px; }
+        .card { background: #1a202c; margin: 10px 15px; padding: 15px; border-radius: 16px; }
+        .card-header { display: flex; justify-content: space-between; color: #8a94a6; font-size: 14px; }
+        .list-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #2d3748; }
+        .list-item:last-child { border-bottom: none; }
+        .item-left { display: flex; align-items: center; gap: 12px; }
+        .icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; }
+        .icon.green { background: #38a169; }
+        .icon.orange { background: #dd6b20; }
+        .icon.blue { background: #3182ce; }
+        .icon.teal { background: #319795; }
+        .icon.purple { background: #805ad5; }
+        .item-title { font-size: 14px; font-weight: 500; }
+        .item-desc { font-size: 12px; color: #8a94a6; }
+        .item-right { font-weight: bold; font-size: 14px; }
+        .sell-btn-container { text-align: center; padding: 15px 0; }
+        .sell-btn { background: #3182ce; color: white; border: none; padding: 12px 0; width: 80%; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(49,130,206,0.4); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a202c; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #2d3748; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #8a94a6; font-size: 10px; cursor: pointer; }
+        .nav-item.active { color: #3182ce; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+    </script>
+
+    <div class="header">
+        <div class="diamond-logo">💎</div>
+        <h1>Newone Receiver</h1>
+        <div class="subtitle">Trusted buyer of social media accounts</div>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-info">
+            <div class="avatar">Y</div>
+            <div class="user-details">
+                <div class="user-name">Yasin(TG时间)</div>
+                <div class="user-id">7705403835</div>
+                <div class="user-id" style="font-size: 10px; color:#718096;">Joined 05 Apr 2026</div>
+            </div>
+        </div>
+        <div class="level-btn">Level 0 ></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span>Payments overview</span>
+            <span>Hide ^</span>
+        </div>
+        <div class="list-item">
+            <div class="item-left"><div class="icon green">💲</div><div><div class="item-title">Balance</div><div class="item-desc">Money you can withdraw now</div></div></div>
+            <div class="item-right">$9.65</div>
+        </div>
+        <div class="list-item">
+            <div class="item-left"><div class="icon orange">💳</div><div><div class="item-title">Pending</div><div class="item-desc">Money waiting for processing</div></div></div>
+            <div class="item-right">$0.00</div>
+        </div>
+        <div class="list-item">
+            <div class="item-left"><div class="icon blue">📈</div><div><div class="item-title">Income</div><div class="item-desc">Total money you've earned</div></div></div>
+            <div class="item-right">$179.15</div>
+        </div>
+        <div class="list-item">
+            <div class="item-left"><div class="icon teal">📅</div><div><div class="item-title">Today</div><div class="item-desc">Money earned from today's sales</div></div></div>
+            <div class="item-right">$0.00</div>
+        </div>
+        <div class="list-item">
+            <div class="item-left"><div class="icon purple">📆</div><div><div class="item-title">Week</div><div class="item-desc">Money earned from this week's sales</div></div></div>
+            <div class="item-right">$7.14</div>
+        </div>
+
+        <div class="sell-btn-container">
+            <button class="sell-btn" onclick="alert('Account Sell Feature Coming Soon!')">+ Sell account</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item"><div class="nav-icon">💳</div>Payment</div>
+        <div class="nav-item"><div class="nav-icon">✈️</div>Accounts</div>
+        <div class="nav-item"><div class="nav-icon">📋</div>Orders</div>
+        <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
+    </div>
+</body>
+</html>
